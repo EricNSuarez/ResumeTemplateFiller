@@ -1,0 +1,2 @@
+[database]
+DBPath = ./jobs.db
