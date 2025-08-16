@@ -1,0 +1,96 @@
+Prompt to improve resumes based on job description and user story
+
+Instructions for the model:
+You will receive:
+- {job_description} → Job position description.
+- {user_story} → User’s narrative with their relevant experiences, skills, and achievements.
+- {include_cover_letter} → Boolean. If `true`, also generate a short tailored cover letter.
+- {ats_friendly} → Boolean. If `true`, optimize the content for Applicant Tracking Systems (ATS).
+
+Goal:
+Improve and adapt the user’s resume so it aligns with the job description.
+
+Rules:
+1. Language: Always use the same language as the job description, even if the user story is in a different language.
+2. Tone: Professional, clear, and direct. Avoid jargon and excessive buzzwords.
+3. Accuracy: Only use information explicitly present in the user story. Do not invent or assume data.
+4. Relevance: Exclude any user story information that is not relevant to the job description unless explicitly requested.
+5. Ordering:
+   - List experiences in reverse chronological order (most recent first).
+   - List skills in order of relevance to the job description, not alphabetically.
+6. Measurable results: If the user story provides metrics, include them in achievements (e.g., “Reduced processing time by 25%” instead of “Improved processing time”).
+7. Handling missing data: If details are incomplete, explicitly mark them instead of inventing them (e.g., "role": "[Role not specified]").
+8. ATS-friendly mode ({ats_friendly} = true):
+   - Use standard section headings: Summary, Skills, Experience, Education, Certifications, Languages.
+   - Avoid special characters, graphics, tables, or unusual formatting.
+   - Ensure all dates are in MM/YYYY or YYYY format.
+   - Avoid abbreviations unless common in the industry.
+   - Use simple bullet points for achievements.
+9. Structured format: Respond in JSON with the following fields:
+{
+  "summary": "Brief introduction paragraph tailored to the job",
+  "skills": ["List of relevant skills extracted from user_story"],
+  "experience": [
+    {
+      "role": "Job title",
+      "company": "Company",
+      "period": "Dates",
+      "achievements": ["List of achievements relevant to the position, including measurable results if available"]
+    }
+  ],
+  "education": [
+    {
+      "degree": "Degree",
+      "institution": "Institution",
+      "period": "Dates"
+    }
+  ],
+  "additional_sections": [
+    {
+      "section_name": "e.g. Certifications, Languages",
+      "content": "Specific content"
+    }
+  ],
+  "cover_letter": "Tailored cover letter text, only included if {include_cover_letter} is true"
+}
+10. If a field does not apply or there is no data in the user story, leave it as null or an empty list.
+11. Examples of tone:
+✅ "Data analyst with 5+ years of experience delivering actionable insights using SQL, Python, and Power BI for large-scale business intelligence projects."
+❌ "Results-driven, synergistic thought leader with unparalleled track record of maximizing cross-functional excellence."
+
+Example Input:
+Job description: Looking for a data analyst with experience in SQL, Python, and dashboard creation (Power BI or Tableau). Must have worked with large datasets and business stakeholders.
+
+User story: I have been working as a business intelligence analyst for 6 years at ACME Corp. I used SQL to query large relational databases and Python for data cleaning and automation. I built dashboards in Power BI that helped executives track KPIs. Before that, I worked as a marketing assistant for 2 years, handling campaign reports.
+
+include_cover_letter: true
+ats_friendly: true
+
+Example Output:
+{
+  "summary": "Business Intelligence Analyst with 6 years of experience leveraging SQL, Python, and Power BI to deliver actionable insights and support strategic decision-making for executive teams.",
+  "skills": ["SQL", "Python", "Power BI", "Data Cleaning", "KPI Reporting", "Automation", "Dashboard Development"],
+  "experience": [
+    {
+      "role": "Business Intelligence Analyst",
+      "company": "ACME Corp",
+      "period": "2018-2024",
+      "achievements": [
+        "Developed and maintained SQL queries for large relational databases",
+        "Automated data cleaning workflows using Python, reducing processing time by 25%",
+        "Created Power BI dashboards for executives to monitor KPIs and improve decision-making"
+      ]
+    },
+    {
+      "role": "Marketing Assistant",
+      "company": "[Company not specified]",
+      "period": "2016-2018",
+      "achievements": [
+        "Prepared campaign performance reports and presented findings to marketing managers"
+      ]
+    }
+  ],
+  "education": [],
+  "additional_sections": [],
+  "cover_letter": "Dear Hiring Manager,\n\nWith 6 years of experience as a Business Intelligence Analyst, I specialize in transforming complex datasets into actionable insights. My expertise in SQL, Python, and Power BI aligns closely with your requirements. I have successfully developed automated data workflows and built dashboards that enhanced executive decision-making.\n\nI would welcome the opportunity to contribute my skills to your team.\n\nSincerely,\n[Your Name]"
+}
