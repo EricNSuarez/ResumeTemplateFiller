@@ -54,7 +54,7 @@ class JobDatabase:
         Return a list of all jobs in the `jobs` table.
         """
         logger.debug("Fetching all jobs from the database")
-        cursor = self.conn.execute("SELECT id, title, job_description FROM jobs")
+        cursor = self.conn.execute("SELECT id, title, job_description FROM job_postings")
         rows = cursor.fetchall()
         logger.info("Fetched %d job(s)", len(rows))
         return [dict(r) for r in rows]
