@@ -26,35 +26,8 @@ Rules:
    - Ensure all dates are in MM/YYYY or YYYY format.
    - Avoid abbreviations unless common in the industry.
    - Use simple bullet points for achievements.
-9. Structured format: Respond in JSON with the following fields:
-{
-  "summary": "Brief introduction paragraph tailored to the job",
-  "skills": ["List of relevant skills extracted from user_story"],
-  "experience": [
-    {
-      "role": "Job title",
-      "company": "Company",
-      "period": "Dates",
-      "achievements": ["List of achievements relevant to the position, including measurable results if available"]
-    }
-  ],
-  "education": [
-    {
-      "degree": "Degree",
-      "institution": "Institution",
-      "period": "Dates"
-    }
-  ],
-  "additional_sections": [
-    {
-      "section_name": "e.g. Certifications, Languages",
-      "content": "Specific content"
-    }
-  ],
-  "cover_letter": "Tailored cover letter text, only included if {include_cover_letter} is true"
-}
-10. If a field does not apply or there is no data in the user story, leave it as null or an empty list.
-11. Examples of tone:
+9. If a field does not apply or there is no data in the user story, leave it as null or an empty list.
+10. Examples of tone:
 ✅ "Data analyst with 5+ years of experience delivering actionable insights using SQL, Python, and Power BI for large-scale business intelligence projects."
 ❌ "Results-driven, synergistic thought leader with unparalleled track record of maximizing cross-functional excellence."
 
@@ -65,32 +38,3 @@ User story: I have been working as a business intelligence analyst for 6 years a
 
 include_cover_letter: true
 ats_friendly: true
-
-Example Output:
-{
-  "summary": "Business Intelligence Analyst with 6 years of experience leveraging SQL, Python, and Power BI to deliver actionable insights and support strategic decision-making for executive teams.",
-  "skills": ["SQL", "Python", "Power BI", "Data Cleaning", "KPI Reporting", "Automation", "Dashboard Development"],
-  "experience": [
-    {
-      "role": "Business Intelligence Analyst",
-      "company": "ACME Corp",
-      "period": "2018-2024",
-      "achievements": [
-        "Developed and maintained SQL queries for large relational databases",
-        "Automated data cleaning workflows using Python, reducing processing time by 25%",
-        "Created Power BI dashboards for executives to monitor KPIs and improve decision-making"
-      ]
-    },
-    {
-      "role": "Marketing Assistant",
-      "company": "[Company not specified]",
-      "period": "2016-2018",
-      "achievements": [
-        "Prepared campaign performance reports and presented findings to marketing managers"
-      ]
-    }
-  ],
-  "education": [],
-  "additional_sections": [],
-  "cover_letter": "Dear Hiring Manager,\n\nWith 6 years of experience as a Business Intelligence Analyst, I specialize in transforming complex datasets into actionable insights. My expertise in SQL, Python, and Power BI aligns closely with your requirements. I have successfully developed automated data workflows and built dashboards that enhanced executive decision-making.\n\nI would welcome the opportunity to contribute my skills to your team.\n\nSincerely,\n[Your Name]"
-}
