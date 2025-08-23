@@ -65,7 +65,7 @@ class JobDatabase:
         """
         logger.debug(f"Fetching job with id=%d", job_id)
         cursor = self.conn.execute(
-            "SELECT id, title, job_description FROM jobs WHERE id = ?", (job_id,)
+            "SELECT id, title, job_description FROM job_postings WHERE id = ?", (job_id,)
         )
         row = cursor.fetchone()
         if row:

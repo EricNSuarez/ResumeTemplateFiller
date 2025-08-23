@@ -12,18 +12,18 @@ def temp_config_and_db(tmp_path):
     """
     Creates:
       - a config file pointing at a temp SQLite DB
-      - a SQLite DB with a 'jobs' table and a single row
+      - a SQLite DB with a 'job_postings' table and a single row
     Returns:
       (config_path: Path, db_path: Path, job_record: dict)
     """
     # 1) Prepare paths
-    db_path = tmp_path / "jobs.db"
+    db_path = tmp_path / "job_postings.db"
     config_path = tmp_path / "config"
 
     # 2) Create SQLite DB and populate
     conn = sqlite3.connect(str(db_path))
     conn.execute("""
-        CREATE TABLE jobs (
+        CREATE TABLE job_postings (
             id INTEGER PRIMARY KEY,
             title TEXT NOT NULL,
             job_description TEXT NOT NULL
@@ -31,7 +31,7 @@ def temp_config_and_db(tmp_path):
     """)
     sample = {"id": 1, "title": "Test Engineer", "job_description": "Test the system."}
     conn.execute(
-        "INSERT INTO jobs (id, title, job_description) VALUES (:id, :title, :job_description)",
+        "INSERT INTO job_postings (id, title, job_description) VALUES (:id, :title, :job_description)",
         sample
     )
     conn.commit()
