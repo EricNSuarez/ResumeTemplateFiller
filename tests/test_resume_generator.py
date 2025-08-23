@@ -1,11 +1,14 @@
 import configparser
 import logging
 import json
+import datetime
 import pytest
 import warnings
 import os
 from modules.resume_generator import (
     ResumeGenerator,
+    Resume,
+    Experience,
     load_config,
 )
 
@@ -120,10 +123,30 @@ def test_generate_resume_live(temp_resume_env, caplog):
 
 def test_save_resume_creates_file(tmp_path):
     rg = ResumeGenerator(tmp_path / "story.txt", tmp_path / "prompt.txt", "dummy", "dummy")
-    resume_data = {"resume": "Sample resume content"}
+    resume_data = Resume(
+        summary="Test Summary: Lorem ipsum dolor sit amet, consectetuer adipiscing elit.",
+        skills=["Python", "Pytest", "Docker", "SQL", "Debugging"],
+        experience=[
+            Experience(
+            role="Senior Backend Tester",
+            company="Acme Tech",
+            start_date=datetime.datetime.now().date(),
+            end_date=datetime.datetime.now().date(),
+            achievements=["Write a python test."]
+            )
+        ]
+        )
+
     output_file = tmp_path / "output.json"
 
     rg.save_resume(resume_data, output_file)
     assert output_file.exists()
     saved_content = json.loads(output_file.read_text(encoding="utf-8"))
-    assert saved_content == resume_data
+
+    dump_model = resume_data.model_dump()
+
+    for k in ("start_date", "end_date"):
+        for exp in dump_model['experience']:
+            exp[k] = exp[k].isoformat()
+
+    assert saved_content == dump_model
