@@ -116,7 +116,7 @@ def test_generate_resume_live(temp_resume_env, caplog):
         ats_friendly=False
     )
 
-    assert isinstance(output, dict)
+    assert isinstance(output, Resume)
     assert output, "Resume output should not be empty"
     assert any("Generating resume" in r.message for r in caplog.records)
     # TODO: Validate dict keys from output
