@@ -1,18 +1,13 @@
 import json
 import logging
-import configparser
 from pathlib import Path
 from typing import Dict, List, Any, Optional
 from openai import OpenAI
 from pydantic import BaseModel, Field
 from datetime import date
+from modules.config import load_config
 
 logger = logging.getLogger(__name__)
-
-
-class ConfigError(Exception):
-    """Raised when config is invalid or missing required fields."""
-
 
 class ResumeGenerationError(Exception):
     """Raised when resume generation fails."""
@@ -39,47 +34,34 @@ class Resume(BaseModel):
     cover_letter: Optional[str] = Field(description="Tailored cover letter to the job", default=None)
 
 
-def load_config(config_path: Path) -> configparser.ConfigParser:
-    """
-    Load and parse the config file.
-    Expects at least a [user_story] section with USER_STORY defined.
-    """
-    logger.debug("Loading configuration from %s", config_path)
-    if not config_path.exists():
-        logger.error("Config file %s does not exist", config_path)
-        raise ConfigError(f"Config file {config_path} not found")
-
-    config = configparser.ConfigParser()
-    config.read(config_path)
-
-    if 'user_story' not in config or 'USER_STORY' not in config['user_story']:
-        logger.error("Config file %s missing [user_story] section or USER_STORY", config_path)
-        raise ConfigError("Missing [user_story] USER_STORY setting")
-
-    logger.info("Configuration loaded successfully")
-    return config
-
-
 class ResumeGenerator:
-    def __init__(self, user_story_path: Path, prompt_path: Path, api_key: str, model: str):
+    PROMPT_PATH = Path("prompts/GENERATE_RESUME")
+
+    def __init__(self, user_story_path: Path, api_key: str, model: str):
         """
         Initialize the resume generator with paths and API configuration.
         """
         self.user_story_path = user_story_path
-        self.prompt_path = prompt_path
         self.api_key = api_key
         self.model = model
         self.client = OpenAI(api_key=self.api_key, base_url="https://openrouter.ai/api/v1")
 
     @classmethod
-    def from_config(cls, config_path: Path, prompt_path: Path, api_key: str, model: str) -> "ResumeGenerator":
+    def from_config(cls, config_path: Path) -> "ResumeGenerator":
         """
-        Factory method that reads the USER_STORY path from config file
-        and returns an initialized ResumeGenerator.
+            Factory method that reads the USER_STORY path from config file
+            and returns an initialized ResumeGenerator.
         """
-        config = load_config(config_path)
+        config = load_config(config_path, required_sections=[
+            ('user_story', ['USER_STORY']),
+            ('api', ['OPENROUTER_API_KEY', 'model'])
+        ])
+
         user_story_path = Path(config['user_story']['USER_STORY'])
-        return cls(user_story_path, prompt_path, api_key, model)
+        api_key = config['api']['OPENROUTER_API_KEY']
+        model = config['api']['model']
+
+        return cls(user_story_path, api_key, model)
 
     def read_user_story(self) -> str:
         """
@@ -98,12 +80,12 @@ class ResumeGenerator:
         """
         Read the resume generation prompt from file.
         """
-        logger.debug("Reading prompt from %s", self.prompt_path)
-        if not self.prompt_path.exists():
-            logger.error("Prompt file %s not found", self.prompt_path)
-            raise FileNotFoundError(f"Prompt file {self.prompt_path} not found")
+        logger.debug("Reading prompt from %s", self.PROMPT_PATH)
+        if not self.PROMPT_PATH.exists():
+            logger.error("Prompt file %s not found", self.PROMPT_PATH)
+            raise FileNotFoundError(f"Prompt file {self.PROMPT_PATH} not found")
 
-        content = self.prompt_path.read_text(encoding="utf-8").strip()
+        content = self.PROMPT_PATH.read_text(encoding="utf-8").strip()
         logger.info("Prompt loaded successfully (%d characters)", len(content))
         return content
 

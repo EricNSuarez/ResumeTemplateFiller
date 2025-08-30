@@ -2,7 +2,9 @@ import sqlite3
 import configparser
 import logging
 import pytest
-from modules.database import JobDatabase, ConfigError, load_config
+from modules.database import JobDatabase
+from modules.config import ConfigError
+from pathlib import Path
 
 # Enable logging capture in pytest
 logging.getLogger("modules.database").setLevel(logging.DEBUG)
@@ -45,23 +47,24 @@ def temp_config_and_db(tmp_path):
 
     yield config_path, db_path, sample
 
+# TODO: Move config related tests in this file to different test file
 def test_load_config_success(temp_config_and_db):
     config_path, db_path, sample = temp_config_and_db
-    cfg = load_config(config_path)
-    assert 'database' in cfg
-    assert cfg['database']['DBPath'] == str(db_path)
+    db = JobDatabase.from_config(config_path)
+    assert isinstance(db, JobDatabase)
+    assert db.db_path == Path(db_path)
 
 def test_load_config_missing_file(tmp_path):
     missing = tmp_path / "no-such"
     with pytest.raises(ConfigError):
-        load_config(missing)
+        JobDatabase.from_config(missing)
 
 def test_load_config_bad_content(tmp_path):
     cfg_file = tmp_path / "bad"
     # write an empty file
     cfg_file.write_text("", encoding="utf-8")
     with pytest.raises(ConfigError):
-        load_config(cfg_file)
+        JobDatabase.from_config(cfg_file)
 
 def test_jobdatabase_from_config_and_queries(temp_config_and_db, caplog):
     config_path, db_path, sample = temp_config_and_db

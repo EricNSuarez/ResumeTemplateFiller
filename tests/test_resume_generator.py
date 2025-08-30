@@ -9,7 +9,6 @@ from modules.resume_generator import (
     ResumeGenerator,
     Resume,
     Experience,
-    load_config,
 )
 
 # Enable logging capture in pytest
@@ -28,7 +27,6 @@ def temp_resume_env(tmp_path):
     """
     # Paths
     user_story_path = tmp_path / "user_story.txt"
-    prompt_path = tmp_path / "prompt.txt"
     config_path = tmp_path / "config"
 
     # Write user story
@@ -36,16 +34,6 @@ def temp_resume_env(tmp_path):
         "This is my test user story. I'm a developer with 5 years of Python experience.",
         encoding="utf-8"
     )
-
-    # Minimal working prompt with required placeholders
-    minimal_prompt = (
-        "Given the following job description:\n{job_description}\n"
-        "And the following user story:\n{user_story}\n"
-        "Include cover letter: {include_cover_letter}\n"
-        "ATS friendly: {ats_friendly}\n"
-        "Respond ONLY with valid JSON containing a key 'resume'."
-    )
-    prompt_path.write_text(minimal_prompt, encoding="utf-8")
 
     # Get API config from environment with fallbacks
     api_key = os.environ.get("OPENROUTER_API_KEY", "")
@@ -64,41 +52,34 @@ def temp_resume_env(tmp_path):
     with open(config_path, "w", encoding="utf-8") as f:
         config.write(f)
 
-    yield config_path, user_story_path, prompt_path
+    yield config_path, user_story_path
 
 
 def test_read_user_story_success(temp_resume_env):
-    config_path, user_story_path, prompt_path = temp_resume_env
-    rg = ResumeGenerator(user_story_path, prompt_path, "dummy", "dummy")
+    config_path, user_story_path = temp_resume_env
+    rg = ResumeGenerator(user_story_path, "dummy", "dummy")
     assert rg.read_user_story() == "This is my test user story. I'm a developer with 5 years of Python experience."
 
 
 def test_read_user_story_missing(temp_resume_env):
-    config_path, user_story_path, prompt_path = temp_resume_env
+    config_path, user_story_path = temp_resume_env
     missing_path = user_story_path.parent / "missing.txt"
-    rg = ResumeGenerator(missing_path, prompt_path, "dummy", "dummy")
+    rg = ResumeGenerator(missing_path, "dummy", "dummy")
     with pytest.raises(FileNotFoundError):
         rg.read_user_story()
 
 
 def test_read_prompt_success(temp_resume_env):
-    config_path, user_story_path, prompt_path = temp_resume_env
-    rg = ResumeGenerator(user_story_path, prompt_path, "dummy", "dummy")
+    config_path, user_story_path = temp_resume_env
+    rg = ResumeGenerator(user_story_path, "dummy", "dummy")
     assert "{job_description}" in rg.read_prompt()
-
-
-def test_read_prompt_missing(temp_resume_env):
-    config_path, user_story_path, prompt_path = temp_resume_env
-    missing_path = prompt_path.parent / "missing.txt"
-    rg = ResumeGenerator(user_story_path, missing_path, "dummy", "dummy")
-    with pytest.raises(FileNotFoundError):
-        rg.read_prompt()
 
 
 @pytest.mark.timeout(20)
 def test_generate_resume_live(temp_resume_env, caplog):
-    config_path, user_story_path, prompt_path = temp_resume_env
-    cfg = load_config(config_path)
+    config_path, user_story_path = temp_resume_env
+    cfg = configparser.ConfigParser()
+    cfg.read(config_path)
 
     api_key = cfg["api"].get("OPENROUTER_API_KEY", "").strip()
     model = cfg["api"]["model"]
@@ -109,7 +90,7 @@ def test_generate_resume_live(temp_resume_env, caplog):
 
     caplog.set_level(logging.DEBUG)
 
-    rg = ResumeGenerator(user_story_path, prompt_path, api_key, model)
+    rg = ResumeGenerator(user_story_path, api_key, model)
     output = rg.generate_resume(
         job_description="Software Engineer position focused on testing.",
         include_cover_letter=False,
@@ -122,7 +103,7 @@ def test_generate_resume_live(temp_resume_env, caplog):
     # TODO: Validate dict keys from output
 
 def test_save_resume_creates_file(tmp_path):
-    rg = ResumeGenerator(tmp_path / "story.txt", tmp_path / "prompt.txt", "dummy", "dummy")
+    rg = ResumeGenerator(tmp_path / "story.txt", "dummy", "dummy")
     resume_data = Resume(
         summary="Test Summary: Lorem ipsum dolor sit amet, consectetuer adipiscing elit.",
         skills=["Python", "Pytest", "Docker", "SQL", "Debugging"],

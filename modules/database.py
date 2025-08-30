@@ -1,31 +1,11 @@
 import sqlite3
-import configparser
 import logging
 from pathlib import Path
 from typing import List, Dict, Optional
+from modules.config import load_config
 
 logger = logging.getLogger(__name__)
 
-class ConfigError(Exception):
-    """Raised when config is invalid or missing required fields."""
-
-def load_config(config_path: Path) -> configparser.ConfigParser:
-    """
-    Load and parse the config file.
-    Expects at least a [database] section with DBPath defined.
-    """
-    logger.debug("Loading configuration from %s", config_path)
-    if not config_path.exists():
-        logger.error("Config file %s does not exist", config_path)
-        raise ConfigError(f"Config file {config_path} not found")
-
-    config = configparser.ConfigParser()
-    config.read(config_path)
-    if 'database' not in config or 'DBPath' not in config['database']:
-        logger.error("Config file %s missing [database] section or DBPath", config_path)
-        raise ConfigError("Missing [database] DBPath setting")
-    logger.info("Configuration loaded successfully")
-    return config
 
 class JobDatabase:
     def __init__(self, db_path: Path):
@@ -41,12 +21,11 @@ class JobDatabase:
     @classmethod
     def from_config(cls, config_path: Path) -> "JobDatabase":
         """
-        Factory method that reads the DBPath from the given config file
-        and returns an initialized JobDatabase.
+            Factory method that reads the DBPath from the given config file
+            and returns an initialized JobDatabase.
         """
-        config = load_config(config_path)
-        db_path_str = config['database']['DBPath']
-        db_path = Path(db_path_str)
+        config = load_config(config_path, required_sections=[('database', ['DBPath'])])
+        db_path = Path(config['database']['DBPath'])
         return cls(db_path)
 
     def list_jobs(self) -> List[Dict]:
